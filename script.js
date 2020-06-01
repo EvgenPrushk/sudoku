@@ -1,1 +1,0 @@
-const sudoku = new Sudoku;
