@@ -31,6 +31,12 @@ class Sudoku {
     }
   }
 
+  getCopy () {
+      // выбирает только числа с помощью map и объединяем их в виде строки
+      sudoku = new Sudoku(this.body.map(x => x.number).join(''))
+      s 
+  }
+
   getRow(n) {
     const row = [];
 
@@ -234,5 +240,62 @@ class Sudoku {
         cell.element.classList.add("important-cell");
       }
     }
+  }
+// выбирает потенциальные числа, которые могут быть  находиться в ячейке
+  getPotentials () {
+      const potentials = [];
+
+      for (const cell of this.body) {
+          if (cell.number) {
+              potentials.push(cell.number);
+          }
+          else {
+              const rowNumbers = this.getRow(cell.y).map(x => x.number);
+              const columnNumbers = this.getColumn(cell.x).map(x => x.number);
+              const segmentNumbers = this.getSegment(cell.s).map(x => x.number);
+                const alphabet = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+              potentials.push(
+                  alphabet
+                  .filter(x => !rowNumbers.includes(x))
+                  .filter(x => !columnNumbers.includes(x))
+                  .filter(x => !segmentNumbers.includes(x))
+              );
+          }
+      }
+
+      return potentials;
+
+  }
+// работает с копией, чтобы не изменять текущее состояние body
+  solve () {
+      const copy = this.getCopy();
+      let flag = true;
+
+      while (flag) {
+        flag = false;
+        const potentials = copy.getPotentials();
+        
+        for (let i = 0; i < 81; i++) {
+            const potential = potentials[i];
+
+          // распознаем только массив, чтобы отбросить уже имеющиеся цифры
+            if (potential instanceof Array && potential.length === 1) {
+                copy.body[i] = potential[0];
+                flag = true;
+            }           
+        }
+      }
+
+      const potentials = copy.getPotentials();
+     for (let power = 2; power <= 9; power++) {
+         for (let i = 0; i < 81; i++) {
+             const 
+         }
+         
+     }
+     
+    
+     
+      return copy;
   }
 }
