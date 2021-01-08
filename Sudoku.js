@@ -30,11 +30,80 @@ class Sudoku {
       }
     }
   }
+  
+  static getFreeCell (sudoku){
+    const cells = sudoku.body.filter(x => !x.number);
+    //возьмем случайный индекс в этом массиве
+    const index = Math.floor(Math.random() * cells.length);
 
-  getCopy () {
-      // выбирает только числа с помощью map и объединяем их в виде строки
-      sudoku = new Sudoku(this.body.map(x => x.number).join(''))
-      s 
+    return cells[index];
+  }
+
+  static getBusyCell (sudoku){
+    const cells = sudoku.body.filter(x => x.number);
+    //возьмем случайный индекс в этом массиве
+    const index = Math.floor(Math.random() * cells.length);
+
+    return cells[index];
+  }
+
+  static generate (n) {
+    n = Math.min(81, Math.max(n, 0)); 
+    // создаем пустую судоку
+    const w = new Sudoku
+
+    for (let i = 0; i <= 9; i++) {
+      // из w запрашиваем одну свободную ячейку
+      const freeCell = Sudoku.getFreeCell(w);
+      freeCell.number = i;
+    }
+
+    const s = w.solve();
+
+    for (let i = 0; i < 81 - n; i++) {
+      const busyCell = Sudoku.getBusyCell(s);
+      busyCell.number = 0;
+    }
+    // возвращаем, не s чтобы ячейки были не изменяемыми
+    return  new Sudoku(s.body.map(x => x.number).join(''));
+  }
+
+  get isSolved () {
+    for (const cell of this.body) {
+      if (cell.number === 0) {
+        return false;
+      }
+    }
+
+    for (let i = 0; i < 9; i++) {
+      const row = this.getRow(i).map((x) => x.number);
+
+      for (let n = 1; n <= 9; n++) {
+        if (!row.includes(n)) {
+          return false;
+        }
+      }
+
+      const column = this.getColumn(i).map((x) => x.number);
+      for (let n = 1; n <= 9; n++) {
+        if (!column.includes(n)) {
+          return false;
+        }
+      }
+
+      const segment = this.getSegment(i).map((x) => x.number);
+      for (let n = 1; n <= 9; n++) {
+        if (!segment.includes(n)) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  getCopy() {
+    return new Sudoku(this.body.map((x) => x.number).join(""));
   }
 
   getRow(n) {
@@ -77,9 +146,9 @@ class Sudoku {
         cell.number = parseInt(event.key);
 
         if (cell.error) {
-            for (const item of this.body) {
-                item.error = false;
-            }
+          for (const item of this.body) {
+            item.error = false;
+          }
         }
 
         for (const item of this.getRow(cell.y)) {
@@ -241,61 +310,73 @@ class Sudoku {
       }
     }
   }
-// выбирает потенциальные числа, которые могут быть  находиться в ячейке
-  getPotentials () {
-      const potentials = [];
 
-      for (const cell of this.body) {
-          if (cell.number) {
-              potentials.push(cell.number);
-          }
-          else {
-              const rowNumbers = this.getRow(cell.y).map(x => x.number);
-              const columnNumbers = this.getColumn(cell.x).map(x => x.number);
-              const segmentNumbers = this.getSegment(cell.s).map(x => x.number);
-                const alphabet = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-              potentials.push(
-                  alphabet
-                  .filter(x => !rowNumbers.includes(x))
-                  .filter(x => !columnNumbers.includes(x))
-                  .filter(x => !segmentNumbers.includes(x))
-              );
-          }
+  getPotentials() {
+    const potentials = [];
+
+    for (const cell of this.body) {
+      if (cell.number) {
+        potentials.push(cell.number);
+      } else {
+        const alphabet = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        const rowNumbers = this.getRow(cell.y).map((x) => x.number);
+        const columnNumbers = this.getColumn(cell.x).map((x) => x.number);
+        const segmentNumbers = this.getSegment(cell.s).map((x) => x.number);
+
+        potentials.push(
+          alphabet
+            .filter((x) => !rowNumbers.includes(x))
+            .filter((x) => !columnNumbers.includes(x))
+            .filter((x) => !segmentNumbers.includes(x))
+        );
       }
+    }
 
-      return potentials;
-
+    return potentials;
   }
-// работает с копией, чтобы не изменять текущее состояние body
-  solve () {
-      const copy = this.getCopy();
-      let flag = true;
 
-      while (flag) {
-        flag = false;
-        const potentials = copy.getPotentials();
-        
-        for (let i = 0; i < 81; i++) {
-            const potential = potentials[i];
+  solve() {
+    const copy = this.getCopy();
 
-          // распознаем только массив, чтобы отбросить уже имеющиеся цифры
-            if (potential instanceof Array && potential.length === 1) {
-                copy.body[i] = potential[0];
-                flag = true;
-            }           
+    // пример зацикливания
+    let flag = true;
+
+    while (flag) {
+      flag = false;
+      const potentials = copy.getPotentials();
+
+      for (let i = 0; i < 81; i++) {
+        const potential = potentials[i];
+
+        if (potential instanceof Array && potential.length === 1) {
+          copy.body[i].number = potential[0];
+          flag = true;
         }
       }
+    }
 
-      const potentials = copy.getPotentials();
-     for (let power = 2; power <= 9; power++) {
-         for (let i = 0; i < 81; i++) {
-             const 
-         }
-         
-     }
-     
-    
-     
-      return copy;
+    const potentials = copy.getPotentials();
+    //пройдемся по всем потенциалам, где мощность равняется 2
+
+    mainLoop: for (let power = 2; power <= 9; power++) {
+      for (let i = 0; i < 81; i++) {
+        if (potentials[i].length === power) {
+          for (const value of potentials[i]) {
+            const nextCopy = copy.getCopy();
+            nextCopy.body[i].number = value;
+
+            const resultCopy = nextCopy.solve();
+            if (resultCopy.isSolved) {
+              return resultCopy;
+            }
+          }
+
+          // отменяет все for начиная с флага с которого они помечены
+          break mainLoop;
+        }
+      }
+    }
+
+    return copy;
   }
 }
